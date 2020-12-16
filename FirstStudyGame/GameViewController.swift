@@ -30,7 +30,9 @@ class GameViewController: UIViewController {
         ship.look(at: SCNVector3(2 * x, 2 * y, 2 * z))
         
         // Add flight animation
-        ship.runAction(.move(to: SCNVector3(), duration: 5))
+        ship.runAction(.move(to: SCNVector3(), duration: 5)) {
+            self.removeShip()
+        }
         
         // Add the ship in the scene
         scene.rootNode.addChildNode(ship)
@@ -45,6 +47,10 @@ class GameViewController: UIViewController {
         
         // Return the ship
         return ship
+    }
+    
+    func removeShip() {
+        scene.rootNode.childNode(withName: "ship", recursively: true)?.removeFromParentNode()
     }
     
     // MARK: - Inherited Methods
@@ -102,6 +108,10 @@ class GameViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         scnView.addGestureRecognizer(tapGesture)
         
+        // remove existing ship
+        
+        removeShip()
+        
         // add ship to the scene
         
         addShip()
@@ -109,13 +119,13 @@ class GameViewController: UIViewController {
     
     // MARK: - Actions
     
-    @objc
-    func handleTap(_ gestureRecognize: UIGestureRecognizer) {
+    @objc func handleTap(_ gestureRecognize: UIGestureRecognizer) {
         // retrieve the SCNView
         let scnView = self.view as! SCNView
         
         // check what nodes are tapped
         let p = gestureRecognize.location(in: scnView)
+        
         let hitResults = scnView.hitTest(p, options: [:])
         // check that we clicked on at least one object
         if hitResults.count > 0 {
@@ -127,16 +137,11 @@ class GameViewController: UIViewController {
             
             // highlight it
             SCNTransaction.begin()
-            SCNTransaction.animationDuration = 0.5
+            SCNTransaction.animationDuration = 0.2
             
             // on completion - unhighlight
             SCNTransaction.completionBlock = {
-                SCNTransaction.begin()
-                SCNTransaction.animationDuration = 0.5
-                
-                material.emission.contents = UIColor.black
-                
-                SCNTransaction.commit()
+                self.removeShip()
             }
             
             material.emission.contents = UIColor.red
